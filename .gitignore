@@ -1,0 +1,27 @@
+# Build outputs
+/build/
+/out/
+/output/
+/example-code/
+/fabric/build/
+
+# Gradle
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+.gradle-isolated/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# OS/filesystem
+.DS_Store
+Thumbs.db
+
+# Local configs
+.env
+
+# Logs
+*.log

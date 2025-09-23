@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "light-up",
+  "version": "${version}",
+
+  "name": "Light Up",
+  "description": "Lights up areas to prevent mob spawning or better visibility.",
+  "authors": ["noramibu"],
+  "contact": {},
+
+  "license": "MIT",
+  "icon": "assets/light-up/icon.png",
+
+  "environment": "server",
+  "entrypoints": {
+    "main": ["me.noramibu.lightup.LightUp"]
+  },
+
+  "depends": {
+    "fabricloader": "*",
+    "fabric": "*",
+    "minecraft": "%mcVer%"
+  }
+}
