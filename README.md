@@ -2,9 +2,9 @@
 
 Light Up places light sources automatically around players to brighten caves or surfaces, with per-tick pacing and undo support. This repository includes a MultiMCGradle setup to build multiple Minecraft versions from one codebase.
 
-Demo video: https://youtu.be/YJgNZasIbfk
+Demo video: https://youtu.be/0liju6_XNwA
 
-[![Light Up Demo](https://img.youtube.com/vi/YJgNZasIbfk/hqdefault.jpg)](https://youtu.be/YJgNZasIbfk "Light Up demo")
+[![Light Up Demo](https://img.youtube.com/vi/0liju6_XNwA/hqdefault.jpg)](https://youtu.be/0liju6_XNwA "Light Up demo")
 
 ## Features
 - Server-side only (no client mod required)
