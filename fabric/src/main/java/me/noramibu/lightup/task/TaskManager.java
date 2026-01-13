@@ -1,6 +1,5 @@
 package me.noramibu.lightup.task;
 
-import me.noramibu.lightup.model.LightUpType;
 import me.noramibu.lightup.util.BlockUtils;
 import net.minecraft.block.Block;
 import net.minecraft.server.MinecraftServer;
@@ -27,21 +26,24 @@ public class TaskManager {
 
     public void cancel(UUID uuid) {
         Task t = playerTasks.get(uuid);
-        if (t != null) t.cancelled = true;
+        if (t != null) {
+            t.cancelled = true;
+        }
     }
 
-    public void createTask(ServerPlayerEntity player, World world, Task task) {
+    public void createTask(ServerPlayerEntity player, Task task) {
         playerTasks.put(player.getUuid(), task);
         //: >=1.20.0
        task.commandSource.sendFeedback(() -> Text.literal("Light Up started. Scanning " + task.totalBlocks + " blocks..."), false);
-        //: END      /*\ <1.20.0
+        //: END
+      /*\ <1.20.0
 
         task.commandSource.sendFeedback(Text.literal("Light Up started. Scanning " + task.totalBlocks + " blocks..."), false);
         \END */
- }
+    }
 
     public void tick(MinecraftServer server) {
-        for (Task task : new ArrayList<>(playerTasks.values())) {
+        for (Task task : playerTasks.values()) {
             if (task.cancelled) {
                 finish(server, task, true);
                 continue;
@@ -49,12 +51,18 @@ public class TaskManager {
             int processed = 0;
             while (!task.blocks.isEmpty() && processed < task.maxBlocksPerTick) {
                 BlockPos pos = task.blocks.poll();
-                if (pos == null) break;
-                if (!BlockUtils.isValidPlacement(task.world, pos, task.type)) continue;
+                if (pos == null) {
+                    break;
+                }
+                if (!BlockUtils.isValidPlacement(task.world, pos, task.type)) {
+                    continue;
+                }
                 int lightLevel = task.includeSkylight
                         ? task.world.getLightLevel(pos)
                         : task.world.getLightLevel(LightType.BLOCK, pos);
-                if (lightLevel >= task.minLightLevel) continue;
+                if (lightLevel >= task.minLightLevel) {
+                    continue;
+                }
                 if (task.world.setBlockState(pos, task.blockState, Block.NOTIFY_ALL)) {
                     task.placed++;
                     task.currentPlacementRecord.add(pos);
@@ -72,7 +80,6 @@ public class TaskManager {
                             player.sendMessage(Text.literal(msg).formatted(Formatting.YELLOW), true);
                         }
                     }
-                    processed++;
                     break;
                 }
                 processed++;
@@ -83,31 +90,34 @@ public class TaskManager {
         }
     }
 
-    private void finish(MinecraftServer server, Task task, boolean cancelled) {
+    private void finish(MinecraftServer server, Task task, boolean cancelledFinal) {
         playerTasks.remove(task.playerUuid);
         if (!task.currentPlacementRecord.isEmpty()) {
             playerUndo.computeIfAbsent(task.playerUuid, k -> new ArrayDeque<>()).addLast(task.currentPlacementRecord);
         }
-        boolean cancelledFinal = cancelled;
         //: >=1.20.0
        task.commandSource.sendFeedback(() -> Text.literal(cancelledFinal ? "Light up task cancelled" : ("Light Up complete. Scanned " + task.totalBlocks + ", Placed " + task.placed + ".")), false);
-        //: END      /*\ <1.20.0
+        //: END
 
+        /*\ <1.20.0
         task.commandSource.sendFeedback(Text.literal(cancelledFinal ? "Light up task cancelled" : ("Light Up complete. Scanned " + task.totalBlocks + ", Placed " + task.placed + ".")), false);
         \END */
- }
+    }
 
     public boolean undo(ServerPlayerEntity player) {
         Deque<List<BlockPos>> stack = playerUndo.computeIfAbsent(player.getUuid(), k -> new ArrayDeque<>());
-        if (stack.isEmpty()) return false;
+        if (stack.isEmpty()) {
+            return false;
+        }
         List<BlockPos> last = stack.removeLast();
         //: >=1.21.7
-     var world = player.getCommandSource().getWorld();
-        //: END      /*\ <=1.21.6
+        World world = player.getCommandSource().getWorld();
+        //: END
 
+        /*\ <=1.21.6
         var world = player.getWorld();
         \END */
-     for (BlockPos pos : last) {
+        for (BlockPos pos : last) {
             world.setBlockState(pos, net.minecraft.block.Blocks.AIR.getDefaultState(), Block.NOTIFY_ALL);
         }
         return true;

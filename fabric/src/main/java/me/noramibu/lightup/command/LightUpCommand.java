@@ -3,14 +3,17 @@ package me.noramibu.lightup.command;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import me.noramibu.lightup.config.config;
+import me.noramibu.lightup.config.Config;
 import me.noramibu.lightup.model.LightUpType;
 import me.noramibu.lightup.task.Task;
 import me.noramibu.lightup.task.TaskManager;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.block.BlockState;
+import net.minecraft.command.DefaultPermissions;
 import net.minecraft.command.argument.BlockStateArgument;
 import net.minecraft.command.argument.BlockStateArgumentType;
+import net.minecraft.command.permission.PermissionCheck;
+import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -25,33 +28,50 @@ import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
 public final class LightUpCommand {
-    private LightUpCommand() {}
+    //: >=1.21.11
+    private static final PermissionCheck PERMISSION_CHECK = new PermissionCheck.Require(DefaultPermissions.GAMEMASTERS);
+    //: END
 
-    public static void register(TaskManager manager, config config) {
+    public static void register(TaskManager manager, Config config) {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             var root = literal("lightup")
+
+                    /*\ <1.21.11
                 .requires(src -> src.hasPermissionLevel(2))
+                     \END */
+
+                    //: >1.21.11
+                .requires(CommandManager.requirePermissionLevel(PERMISSION_CHECK))
+                    //: END
+
                 .then(literal("reload").executes(ctx -> {
                     config.reload();
+
                     //: >=1.20.0
                    ctx.getSource().sendFeedback(() -> Text.literal(config.messageReload), false);
-                    //: END                   /*\ <1.20.0
+                    //: END
 
+                   /*\ <1.20.0
                     ctx.getSource().sendFeedback(Text.literal(config.messageReload), false);
                     \END */
                  return 1;
                 }))
                 .then(literal("cancel").executes(ctx -> {
                     ServerPlayerEntity player = ctx.getSource().getPlayer();
-                    if (player == null) return 0;
+                    if (player == null) {
+                        return 0;
+                    }
                     manager.cancel(player.getUuid());
                     return 1;
                 }))
                 .then(literal("undo").executes(ctx -> {
                     ServerPlayerEntity player = ctx.getSource().getPlayer();
-                    if (player == null) return 0;
-                    boolean ok = manager.undo(player);
-                    if (!ok) player.sendMessage(Text.literal("Nothing to undo."));
+                    if (player == null) {
+                        return 0;
+                    }
+                    if (!manager.undo(player)) {
+                        player.sendMessage(Text.literal("Nothing to undo."));
+                    }
                     return 1;
                 }))
                 .then(argument("block", BlockStateArgumentType.blockState(registryAccess))
@@ -72,7 +92,7 @@ public final class LightUpCommand {
         });
     }
 
-    private static int execute(com.mojang.brigadier.context.CommandContext<ServerCommandSource> ctx, TaskManager manager, config config) {
+    private static int execute(com.mojang.brigadier.context.CommandContext<ServerCommandSource> ctx, TaskManager manager, Config config) {
         ServerCommandSource source = ctx.getSource();
         ServerPlayerEntity player = source.getPlayer();
         if (player == null) {
@@ -100,7 +120,7 @@ public final class LightUpCommand {
         BlockPos origin = player.getBlockPos();
         Queue<BlockPos> blocks = collectBlocks(world, origin, range);
         Task task = new Task(player.getUuid(), world, state, min, includeSky, type, blocks, config.maxBlocksPerTick, source, config.progressActionBarEnabled, config.progressActionBarFormatting);
-        manager.createTask(player, world, task);
+        manager.createTask(player, task);
         return 1;
     }
 

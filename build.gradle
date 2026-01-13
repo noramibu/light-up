@@ -16,7 +16,7 @@ buildscript {
 apply plugin: 'com.github.tatercertified.multimc'
 
 multimc {
-    currentMinecraftVer = "1.21.8"
+    currentMinecraftVer = "1.21.11"
     futureCompatible = true
     outputDir = Paths.get("output")
     modConfigFileRelativePath = "modConfig"
@@ -25,77 +25,73 @@ multimc {
     loaderSpecificPaths = ["fabric": Paths.get("fabric")]
     gradleConfig = new MCBuildConfig((MCGradleBuilder builder) -> {
         builder.mcVer("1.19.0", (DependencyBuilder depBuilder) -> {
-            depBuilder.dep("minecraft_version", "1.19");
-            depBuilder.dep("yarn_mappings", "1.19+build.4");
-        });
+            depBuilder.dep("minecraft_version", "1.19")
+            depBuilder.dep("yarn_mappings", "1.19+build.4")
+        })
         builder.mcVer("1.19.1", (DependencyBuilder depBuilder) -> {
-            depBuilder.dep("minecraft_version", "1.19.1");
-            depBuilder.dep("yarn_mappings", "1.19.1+build.6");
-        });
+            depBuilder.dep("minecraft_version", "1.19.1")
+            depBuilder.dep("yarn_mappings", "1.19.1+build.6")
+        })
         builder.mcVer("1.19.2", (DependencyBuilder depBuilder) -> {
-            depBuilder.dep("minecraft_version", "1.19.2");
-            depBuilder.dep("yarn_mappings", "1.19.2+build.28");
-        });
+            depBuilder.dep("minecraft_version", "1.19.2")
+            depBuilder.dep("yarn_mappings", "1.19.2+build.28")
+        })
         builder.mcVer("1.19.3", (DependencyBuilder depBuilder) -> {
-            depBuilder.dep("minecraft_version", "1.19.3");
-            depBuilder.dep("yarn_mappings", "1.19.3+build.5");
-        });
+            depBuilder.dep("minecraft_version", "1.19.3")
+            depBuilder.dep("yarn_mappings", "1.19.3+build.5")
+        })
         builder.mcVer("1.19.4", (DependencyBuilder depBuilder) -> {
-            depBuilder.dep("minecraft_version", "1.19.4");
-            depBuilder.dep("yarn_mappings", "1.19.4+build.2");
-        });
+            depBuilder.dep("minecraft_version", "1.19.4")
+            depBuilder.dep("yarn_mappings", "1.19.4+build.2")
+        })
         builder.mcVer("1.20.0", (DependencyBuilder depBuilder) -> {
-            depBuilder.dep("minecraft_version", "1.20");
-            depBuilder.dep("yarn_mappings", "1.20+build.1");
-        });
+            depBuilder.dep("minecraft_version", "1.20")
+            depBuilder.dep("yarn_mappings", "1.20+build.1")
+        })
         builder.mcVer("1.20.1", (DependencyBuilder depBuilder) -> {
-            depBuilder.dep("minecraft_version", "1.20.1");
-            depBuilder.dep("yarn_mappings", "1.20.1+build.10");
-        });
+            depBuilder.dep("minecraft_version", "1.20.1")
+            depBuilder.dep("yarn_mappings", "1.20.1+build.10")
+        })
         builder.mcVer("1.20.2", (DependencyBuilder depBuilder) -> {
-            depBuilder.dep("minecraft_version", "1.20.2");
-            depBuilder.dep("yarn_mappings", "1.20.2+build.4");
-        });
+            depBuilder.dep("minecraft_version", "1.20.2")
+            depBuilder.dep("yarn_mappings", "1.20.2+build.4")
+        })
         builder.mcVer("1.20.3", (DependencyBuilder depBuilder) -> {
-            depBuilder.dep("minecraft_version", "1.20.3");
-            depBuilder.dep("yarn_mappings", "1.20.3+build.1");
-        });
+            depBuilder.dep("minecraft_version", "1.20.3")
+            depBuilder.dep("yarn_mappings", "1.20.3+build.1")
+        })
         builder.mcVer("1.20.4", (DependencyBuilder depBuilder) -> {
-            depBuilder.dep("minecraft_version", "1.20.4");
-            depBuilder.dep("yarn_mappings", "1.20.4+build.3");
-        });
+            depBuilder.dep("minecraft_version", "1.20.4")
+            depBuilder.dep("yarn_mappings", "1.20.4+build.3")
+        })
         builder.mcVer("1.20.5", (DependencyBuilder depBuilder) -> {
-            depBuilder.dep("minecraft_version", "1.20.5");
-            depBuilder.dep("yarn_mappings", "1.20.5+build.1");
-        });
+            depBuilder.dep("minecraft_version", "1.20.5")
+            depBuilder.dep("yarn_mappings", "1.20.5+build.1")
+        })
         builder.mcVer("1.20.6", (DependencyBuilder depBuilder) -> {
-            depBuilder.dep("minecraft_version", "1.20.6");
-            depBuilder.dep("yarn_mappings", "1.20.6+build.3");
-        });
+            depBuilder.dep("minecraft_version", "1.20.6")
+            depBuilder.dep("yarn_mappings", "1.20.6+build.3")
+        })
         builder.mcVer("1.21.0", (DependencyBuilder depBuilder) -> {
-            depBuilder.dep("minecraft_version", "1.21");
-            depBuilder.dep("yarn_mappings", "1.21+build.9");
-        });
+            depBuilder.dep("minecraft_version", "1.21")
+            depBuilder.dep("yarn_mappings", "1.21+build.9")
+        })
         builder.mcVer("1.21.1", (DependencyBuilder depBuilder) -> {
-            depBuilder.depCopyAll("1.21.5");
-            depBuilder.dep("minecraft_version", "1.21.1");
-            depBuilder.dep("yarn_mappings", "1.21.1+build.3");
-        });
+            depBuilder.dep("minecraft_version", "1.21.1")
+            depBuilder.dep("yarn_mappings", "1.21.1+build.3")
+        })
         builder.mcVer("1.21.2", (DependencyBuilder depBuilder) -> {
-            depBuilder.depCopyAll("1.21.5");
-            depBuilder.dep("minecraft_version", "1.21.2");
-            depBuilder.dep("yarn_mappings", "1.21.2+build.1");
-        });
+            depBuilder.dep("minecraft_version", "1.21.2")
+            depBuilder.dep("yarn_mappings", "1.21.2+build.1")
+        })
         builder.mcVer("1.21.3", (DependencyBuilder depBuilder) -> {
-            depBuilder.depCopyAll("1.21.5");
-            depBuilder.dep("minecraft_version", "1.21.3");
-            depBuilder.dep("yarn_mappings", "1.21.3+build.2");
-        });
+            depBuilder.dep("minecraft_version", "1.21.3")
+            depBuilder.dep("yarn_mappings", "1.21.3+build.2")
+        })
         builder.mcVer("1.21.4", (DependencyBuilder depBuilder) -> {
-            depBuilder.depCopyAll("1.21.5");
-            depBuilder.dep("minecraft_version", "1.21.4");
-            depBuilder.dep("yarn_mappings", "1.21.4+build.8");
-        });
+            depBuilder.dep("minecraft_version", "1.21.4")
+            depBuilder.dep("yarn_mappings", "1.21.4+build.8")
+        })
         builder.mcVer("1.21.5", (DependencyBuilder depBuilder) -> {
             depBuilder.dep("minecraft_version", "1.21.5")
             depBuilder.dep("yarn_mappings", "1.21.5+build.1")
@@ -109,12 +105,23 @@ multimc {
             depBuilder.dep("yarn_mappings", "1.21.7+build.8")
         })
         builder.mcVer("1.21.8", (DependencyBuilder depBuilder) -> {
-            depBuilder.dep("minecraft_version", "1.21.8");
-            depBuilder.dep("yarn_mappings", "1.21.8+build.1");
+            depBuilder.dep("minecraft_version", "1.21.8")
+            depBuilder.dep("yarn_mappings", "1.21.8+build.1")
         })
-        builder.mcVer("1.21.9-pre3", (DependencyBuilder depBuilder) -> {
-            depBuilder.dep("minecraft_version", "1.21.9-pre3");
-            depBuilder.dep("yarn_mappings", "1.21.9-pre3+build.1");
+        builder.mcVer("1.21.9", (DependencyBuilder depBuilder) -> {
+            depBuilder.dep("minecraft_version", "1.21.9")
+            depBuilder.dep("yarn_mappings", "1.21.9+build.1")
+            depBuilder.dep("fabric_version", "0.134.1+1.21.9")
+        })
+        builder.mcVer("1.21.10", (DependencyBuilder depBuilder) -> {
+            depBuilder.dep("minecraft_version", "1.21.10")
+            depBuilder.dep("yarn_mappings", "1.21.10+build.3")
+            depBuilder.dep("fabric_version", "0.138.4+1.21.10")
+        })
+        builder.mcVer("1.21.11", (DependencyBuilder depBuilder) -> {
+            depBuilder.dep("minecraft_version", "1.21.11")
+            depBuilder.dep("yarn_mappings", "1.21.11+build.4")
+            depBuilder.dep("fabric_version", "0.141.1+1.21.11")
         })
     })
 }
