@@ -1,7 +1,7 @@
 package me.noramibu.lightup;
 
 import me.noramibu.lightup.command.LightUpCommand;
-import me.noramibu.lightup.config.config;
+import me.noramibu.lightup.config.Config;
 import me.noramibu.lightup.task.TaskManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -15,7 +15,7 @@ public class LightUp implements ModInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger("light-up");
 
     private final TaskManager taskManager = new TaskManager();
-    private final config cfg = config.loadOrCreate();
+    private final Config cfg = Config.loadOrCreate();
 
     @Override
     public void onInitialize() {
@@ -24,7 +24,7 @@ public class LightUp implements ModInitializer {
             taskManager.ensureUndoStack(uuid);
         });
 
-        ServerTickEvents.END_SERVER_TICK.register(server -> taskManager.tick(server));
+        ServerTickEvents.END_SERVER_TICK.register(taskManager::tick);
 
         LightUpCommand.register(taskManager, cfg);
 

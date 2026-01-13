@@ -12,7 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public final class config {
+public final class Config {
     // Messages
     public String messageReload = translate("&aLight Up has been reloaded!");
     public String messageOnlyPlayerCommand = translate("&cThis command can only be executed by a player");
@@ -33,8 +33,8 @@ public final class config {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG_PATH = Paths.get("config", "light-up.json");
 
-    public static config loadOrCreate() {
-        config cfg = new config();
+    public static Config loadOrCreate() {
+        Config cfg = new Config();
         try {
             if (!Files.exists(CONFIG_PATH)) {
                 Files.createDirectories(CONFIG_PATH.getParent());
@@ -64,7 +64,9 @@ public final class config {
             }
         } catch (IOException ignored) {}
         // Always rewrite to ensure new fields are present
-        try { write(cfg); } catch (IOException ignored) {}
+        try {
+            write(cfg);
+        } catch (IOException ignored) {}
         return cfg;
     }
 
@@ -75,7 +77,9 @@ public final class config {
             }
             try (Reader reader = Files.newBufferedReader(CONFIG_PATH, StandardCharsets.UTF_8)) {
                 JsonObject root = GSON.fromJson(reader, JsonObject.class);
-                if (root == null) return;
+                if (root == null) {
+                    return;
+                }
                 JsonObject messages = root.has("messages") && root.get("messages").isJsonObject() ? root.getAsJsonObject("messages") : new JsonObject();
                 JsonObject options = root.has("options") && root.get("options").isJsonObject() ? root.getAsJsonObject("options") : new JsonObject();
 
@@ -97,7 +101,7 @@ public final class config {
         } catch (IOException ignored) {}
     }
 
-    private static void write(config cfg) throws IOException {
+    private static void write(Config cfg) throws IOException {
         JsonObject root = new JsonObject();
         JsonObject messages = new JsonObject();
         messages.addProperty("reload", cfg.messageReload);
@@ -135,7 +139,7 @@ public final class config {
     }
 
     private static String translate(String s) {
-        return s.replace('&', '\u00A7');
+        return s.replace('&', '§');
     }
 
     private static String getOr(JsonObject obj, String key, String def) {
