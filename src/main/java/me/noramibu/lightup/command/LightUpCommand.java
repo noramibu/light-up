@@ -3,6 +3,7 @@ package me.noramibu.lightup.command;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.noramibu.lightup.config.Config;
 import me.noramibu.lightup.model.LightUpType;
 import me.noramibu.lightup.task.Task;
@@ -26,10 +27,12 @@ import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
 public final class LightUpCommand {
+    private static final String COMMAND_PERMISSION = "lightup.command";
+
     public static void register(TaskManager manager, Config config) {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             var root = literal("lightup")
-                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .requires(Permissions.require(COMMAND_PERMISSION, 2))
                 .then(literal("reload").executes(ctx -> {
                     config.reload();
                     ctx.getSource().sendSuccess(() -> Component.literal(config.messageReload), false);

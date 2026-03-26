@@ -12,6 +12,12 @@ base {
 
 repositories {
     maven { url = "https://maven.fabricmc.net/" }
+    maven {
+        url = "https://central.sonatype.com/repository/maven-snapshots/"
+        mavenContent {
+            snapshotsOnly()
+        }
+    }
     mavenCentral()
 }
 
@@ -19,6 +25,8 @@ dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    implementation "me.lucko:fabric-permissions-api:0.7.1-SNAPSHOT"
+    include "me.lucko:fabric-permissions-api:0.7.1-SNAPSHOT"
 }
 
 processResources {
