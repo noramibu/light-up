@@ -20,31 +20,14 @@ public class LightUp implements ModInitializer {
     @Override
     public void onInitialize() {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            UUID uuid = handler.player.getUuid();
+            UUID uuid = handler.player.getUUID();
             taskManager.ensureUndoStack(uuid);
         });
 
         ServerTickEvents.END_SERVER_TICK.register(taskManager::tick);
 
         LightUpCommand.register(taskManager, cfg);
-
-        //: >=1.21.7
-        LOGGER.info("Light Up initialized for 1.21.7+");
-        //: END
-
-        /*\ >=1.21.0 <1.21.7
-        LOGGER.info("Light Up initialized for 1.21.0 - 1.21.6");
-        \END */
-
-         /*\ >=1.20.0 <1.21.0
-         LOGGER.info("Light Up initialized for 1.20.x");
-        \END */
-
-        /*\ <1.20.0
-        LOGGER.info("Light Up initialized for 1.19.x");
-        \END */
-
-
+        LOGGER.info("Light Up initialized for Minecraft 26.1");
     }
 }
 

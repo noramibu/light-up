@@ -1,14 +1,14 @@
 package me.noramibu.lightup.task;
 
 import me.noramibu.lightup.util.BlockUtils;
-import net.minecraft.block.Block;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.Block;
 
 import java.util.*;
 
@@ -31,21 +31,19 @@ public class TaskManager {
         }
     }
 
-    public void createTask(ServerPlayerEntity player, Task task) {
-        playerTasks.put(player.getUuid(), task);
-        //: >=1.20.0
-       task.commandSource.sendFeedback(() -> Text.literal("Light Up started. Scanning " + task.totalBlocks + " blocks..."), false);
-        //: END
-      /*\ <1.20.0
-
-        task.commandSource.sendFeedback(Text.literal("Light Up started. Scanning " + task.totalBlocks + " blocks..."), false);
-        \END */
+    public void createTask(ServerPlayer player, Task task) {
+        playerTasks.put(player.getUUID(), task);
+        task.commandSource.sendSuccess(() -> Component.literal("Light Up started. Scanning " + task.totalBlocks + " blocks..."), false);
     }
 
     public void tick(MinecraftServer server) {
-        for (Task task : playerTasks.values()) {
+        List<Task> finishedTasks = new ArrayList<>();
+        Iterator<Map.Entry<UUID, Task>> iterator = playerTasks.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Task task = iterator.next().getValue();
             if (task.cancelled) {
-                finish(server, task, true);
+                iterator.remove();
+                finishedTasks.add(task);
                 continue;
             }
             int processed = 0;
@@ -54,16 +52,16 @@ public class TaskManager {
                 if (pos == null) {
                     break;
                 }
-                if (!BlockUtils.isValidPlacement(task.world, pos, task.type)) {
+                if (!BlockUtils.isValidPlacement(task.world, pos, task.blockState, task.type)) {
                     continue;
                 }
                 int lightLevel = task.includeSkylight
-                        ? task.world.getLightLevel(pos)
-                        : task.world.getLightLevel(LightType.BLOCK, pos);
+                        ? task.world.getMaxLocalRawBrightness(pos)
+                        : task.world.getBrightness(LightLayer.BLOCK, pos);
                 if (lightLevel >= task.minLightLevel) {
                     continue;
                 }
-                if (task.world.setBlockState(pos, task.blockState, Block.NOTIFY_ALL)) {
+                if (task.world.setBlock(pos, task.blockState, Block.UPDATE_ALL)) {
                     task.placed++;
                     task.currentPlacementRecord.add(pos);
                     if (task.progressEnabled) {
@@ -74,10 +72,9 @@ public class TaskManager {
                                 .replace("{TotalBlocks}", String.valueOf(task.totalBlocks))
                                 .replace("{PlacedLights}", String.valueOf(task.placed))
                                 .replace("{CompletedPercentage}", String.valueOf(percentage));
-                        ServerPlayerEntity player = server.getPlayerManager().getPlayer(task.playerUuid);
+                        ServerPlayer player = server.getPlayerList().getPlayer(task.playerUuid);
                         if (player != null) {
-                            // Use overlay message as action bar equivalent
-                            player.sendMessage(Text.literal(msg).formatted(Formatting.YELLOW), true);
+                            player.sendOverlayMessage(Component.literal(msg).withStyle(ChatFormatting.YELLOW));
                         }
                     }
                     break;
@@ -85,40 +82,35 @@ public class TaskManager {
                 processed++;
             }
             if (task.blocks.isEmpty()) {
-                finish(server, task, false);
+                iterator.remove();
+                finishedTasks.add(task);
             }
+        }
+
+        for (Task task : finishedTasks) {
+            finish(task, task.cancelled);
         }
     }
 
-    private void finish(MinecraftServer server, Task task, boolean cancelledFinal) {
-        playerTasks.remove(task.playerUuid);
+    private void finish(Task task, boolean cancelledFinal) {
         if (!task.currentPlacementRecord.isEmpty()) {
             playerUndo.computeIfAbsent(task.playerUuid, k -> new ArrayDeque<>()).addLast(task.currentPlacementRecord);
         }
-        //: >=1.20.0
-       task.commandSource.sendFeedback(() -> Text.literal(cancelledFinal ? "Light up task cancelled" : ("Light Up complete. Scanned " + task.totalBlocks + ", Placed " + task.placed + ".")), false);
-        //: END
-
-        /*\ <1.20.0
-        task.commandSource.sendFeedback(Text.literal(cancelledFinal ? "Light up task cancelled" : ("Light Up complete. Scanned " + task.totalBlocks + ", Placed " + task.placed + ".")), false);
-        \END */
+        task.commandSource.sendSuccess(
+            () -> Component.literal(cancelledFinal ? "Light up task cancelled" : ("Light Up complete. Scanned " + task.totalBlocks + ", Placed " + task.placed + ".")),
+            false
+        );
     }
 
-    public boolean undo(ServerPlayerEntity player) {
-        Deque<List<BlockPos>> stack = playerUndo.computeIfAbsent(player.getUuid(), k -> new ArrayDeque<>());
+    public boolean undo(ServerPlayer player) {
+        Deque<List<BlockPos>> stack = playerUndo.computeIfAbsent(player.getUUID(), k -> new ArrayDeque<>());
         if (stack.isEmpty()) {
             return false;
         }
         List<BlockPos> last = stack.removeLast();
-        //: >=1.21.7
-        World world = player.getCommandSource().getWorld();
-        //: END
-
-        /*\ <=1.21.6
-        var world = player.getWorld();
-        \END */
+        Level world = player.level();
         for (BlockPos pos : last) {
-            world.setBlockState(pos, net.minecraft.block.Blocks.AIR.getDefaultState(), Block.NOTIFY_ALL);
+            world.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
         }
         return true;
     }

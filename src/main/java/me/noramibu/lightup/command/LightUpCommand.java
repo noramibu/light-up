@@ -8,73 +8,52 @@ import me.noramibu.lightup.model.LightUpType;
 import me.noramibu.lightup.task.Task;
 import me.noramibu.lightup.task.TaskManager;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.minecraft.block.BlockState;
-import net.minecraft.command.DefaultPermissions;
-import net.minecraft.command.argument.BlockStateArgument;
-import net.minecraft.command.argument.BlockStateArgumentType;
-import net.minecraft.command.permission.PermissionCheck;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.Heightmap;
-import net.minecraft.world.World;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.blocks.BlockInput;
+import net.minecraft.commands.arguments.blocks.BlockStateArgument;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
 
-import static net.minecraft.server.command.CommandManager.argument;
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.argument;
+import static net.minecraft.commands.Commands.literal;
 
 public final class LightUpCommand {
-    //: >=1.21.11
-    private static final PermissionCheck PERMISSION_CHECK = new PermissionCheck.Require(DefaultPermissions.GAMEMASTERS);
-    //: END
-
     public static void register(TaskManager manager, Config config) {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             var root = literal("lightup")
-
-                    /*\ <1.21.11
-                .requires(src -> src.hasPermissionLevel(2))
-                     \END */
-
-                    //: >1.21.11
-                .requires(CommandManager.requirePermissionLevel(PERMISSION_CHECK))
-                    //: END
-
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(literal("reload").executes(ctx -> {
                     config.reload();
-
-                    //: >=1.20.0
-                   ctx.getSource().sendFeedback(() -> Text.literal(config.messageReload), false);
-                    //: END
-
-                   /*\ <1.20.0
-                    ctx.getSource().sendFeedback(Text.literal(config.messageReload), false);
-                    \END */
-                 return 1;
+                    ctx.getSource().sendSuccess(() -> Component.literal(config.messageReload), false);
+                    return 1;
                 }))
                 .then(literal("cancel").executes(ctx -> {
-                    ServerPlayerEntity player = ctx.getSource().getPlayer();
+                    ServerPlayer player = ctx.getSource().getPlayer();
                     if (player == null) {
                         return 0;
                     }
-                    manager.cancel(player.getUuid());
+                    manager.cancel(player.getUUID());
                     return 1;
                 }))
                 .then(literal("undo").executes(ctx -> {
-                    ServerPlayerEntity player = ctx.getSource().getPlayer();
+                    ServerPlayer player = ctx.getSource().getPlayer();
                     if (player == null) {
                         return 0;
                     }
                     if (!manager.undo(player)) {
-                        player.sendMessage(Text.literal("Nothing to undo."));
+                        player.sendSystemMessage(Component.literal("Nothing to undo."));
                     }
                     return 1;
                 }))
-                .then(argument("block", BlockStateArgumentType.blockState(registryAccess))
+                .then(argument("block", BlockStateArgument.block(registryAccess))
                     .then(argument("min_light_level", IntegerArgumentType.integer(0, 15))
                         .then(argument("range", IntegerArgumentType.integer(0))
                             .then(argument("include_skylight", BoolArgumentType.bool())
@@ -92,19 +71,19 @@ public final class LightUpCommand {
         });
     }
 
-    private static int execute(com.mojang.brigadier.context.CommandContext<ServerCommandSource> ctx, TaskManager manager, Config config) {
-        ServerCommandSource source = ctx.getSource();
-        ServerPlayerEntity player = source.getPlayer();
+    private static int execute(com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx, TaskManager manager, Config config) {
+        CommandSourceStack source = ctx.getSource();
+        ServerPlayer player = source.getPlayer();
         if (player == null) {
-            source.sendError(Text.literal("Only players can use this command."));
+            source.sendFailure(Component.literal("Only players can use this command."));
             return 0;
         }
-        if (manager.hasActiveTask(player.getUuid())) {
-            player.sendMessage(Text.literal("Please wait for the current Light Up task to complete."));
+        if (manager.hasActiveTask(player.getUUID())) {
+            player.sendSystemMessage(Component.literal("Please wait for the current Light Up task to complete."));
             return 1;
         }
-        BlockStateArgument parsed = BlockStateArgumentType.getBlockState(ctx, "block");
-        BlockState state = parsed.getBlockState();
+        BlockInput parsed = BlockStateArgument.getBlock(ctx, "block");
+        BlockState state = parsed.getState();
         int min = IntegerArgumentType.getInteger(ctx, "min_light_level");
         int range = IntegerArgumentType.getInteger(ctx, "range");
         boolean includeSky = BoolArgumentType.getBool(ctx, "include_skylight");
@@ -116,18 +95,18 @@ public final class LightUpCommand {
             type = LightUpType.ALL;
         }
 
-        World world = source.getWorld();
-        BlockPos origin = player.getBlockPos();
+        Level world = source.getLevel();
+        BlockPos origin = player.blockPosition();
         Queue<BlockPos> blocks = collectBlocks(world, origin, range);
-        Task task = new Task(player.getUuid(), world, state, min, includeSky, type, blocks, config.maxBlocksPerTick, source, config.progressActionBarEnabled, config.progressActionBarFormatting);
+        Task task = new Task(player.getUUID(), world, state, min, includeSky, type, blocks, config.maxBlocksPerTick, source, config.progressActionBarEnabled, config.progressActionBarFormatting);
         manager.createTask(player, task);
         return 1;
     }
 
-    private static Queue<BlockPos> collectBlocks(World world, BlockPos origin, int distanceMax) {
+    private static Queue<BlockPos> collectBlocks(Level world, BlockPos origin, int distanceMax) {
         Queue<BlockPos> blocks = new ArrayDeque<>();
-        int minY = Math.max(world.getBottomY(), origin.getY() - distanceMax);
-        int topAtOrigin = world.getTopY(Heightmap.Type.WORLD_SURFACE, origin.getX(), origin.getZ());
+        int minY = Math.max(world.getMinY(), origin.getY() - distanceMax);
+        int topAtOrigin = world.getHeight(Heightmap.Types.WORLD_SURFACE, origin.getX(), origin.getZ());
         int maxY = Math.min(topAtOrigin, origin.getY() + distanceMax);
         for (int y = minY; y <= maxY; y++) {
             for (int x = origin.getX() - distanceMax; x <= origin.getX() + distanceMax; x++) {

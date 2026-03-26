@@ -3,7 +3,7 @@
 /out/
 /output/
 /example-code/
-/fabric/build/
+/run/
 
 # Gradle
 .gradle/

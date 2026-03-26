@@ -13,7 +13,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public final class Config {
-    // Messages
     public String messageReload = translate("&aLight Up has been reloaded!");
     public String messageOnlyPlayerCommand = translate("&cThis command can only be executed by a player");
     public String messageNoActiveTask = translate("&eThere is no active light up tasks");
@@ -25,7 +24,6 @@ public final class Config {
     public String messageUndoUnloadedWorld = translate("&cUndo cancelled! Destination world is not loaded!");
     public String messageUndoCompleteTemplate = translate("&dLast light up task had been undone, reverted {BlocksUndone} light sources!");
 
-    // Options
     public int maxBlocksPerTick = 4000;
     public boolean progressActionBarEnabled = true;
     public String progressActionBarFormatting = translate("&eLight Up Task: &a{ScannedBlocks}&b/{TotalBlocks} {CompletedPercentage}% &e({PlacedLights} lights placed)");
@@ -43,7 +41,9 @@ public final class Config {
             }
             try (Reader reader = Files.newBufferedReader(CONFIG_PATH, StandardCharsets.UTF_8)) {
                 JsonObject root = GSON.fromJson(reader, JsonObject.class);
-                if (root == null) return cfg;
+                if (root == null) {
+                    return cfg;
+                }
                 JsonObject messages = root.has("messages") && root.get("messages").isJsonObject() ? root.getAsJsonObject("messages") : new JsonObject();
                 JsonObject options = root.has("options") && root.get("options").isJsonObject() ? root.getAsJsonObject("options") : new JsonObject();
 
@@ -62,11 +62,13 @@ public final class Config {
                 cfg.progressActionBarEnabled = options.has("progressActionBarEnabled") && options.get("progressActionBarEnabled").getAsBoolean();
                 cfg.progressActionBarFormatting = getOr(options, "progressActionBarFormatting", cfg.progressActionBarFormatting);
             }
-        } catch (IOException ignored) {}
-        // Always rewrite to ensure new fields are present
+        } catch (IOException ignored) {
+        }
+
         try {
             write(cfg);
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
         return cfg;
     }
 
@@ -98,7 +100,8 @@ public final class Config {
                 this.progressActionBarEnabled = options.has("progressActionBarEnabled") && options.get("progressActionBarEnabled").getAsBoolean();
                 this.progressActionBarFormatting = getOr(options, "progressActionBarFormatting", this.progressActionBarFormatting);
             }
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
     }
 
     private static void write(Config cfg) throws IOException {
@@ -139,12 +142,10 @@ public final class Config {
     }
 
     private static String translate(String s) {
-        return s.replace('&', '§');
+        return s.replace('&', '\u00A7');
     }
 
     private static String getOr(JsonObject obj, String key, String def) {
         return obj.has(key) ? obj.get(key).getAsString() : def;
     }
 }
-
-
