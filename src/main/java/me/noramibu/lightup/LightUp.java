@@ -27,7 +27,7 @@ public class LightUp implements ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register(taskManager::tick);
 
         LightUpCommand.register(taskManager, cfg);
-        LOGGER.info("Light Up initialized for Minecraft 26.1.1");
+        LOGGER.info("Light Up initialized for Minecraft 26.1.x (built against 26.1.2)");
     }
 }
 

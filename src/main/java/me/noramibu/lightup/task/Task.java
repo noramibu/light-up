@@ -7,9 +7,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
 
 public class Task {
@@ -22,6 +24,8 @@ public class Task {
     public final Queue<BlockPos> blocks;
     public final int maxBlocksPerTick;
     public final List<BlockPos> currentPlacementRecord = new ArrayList<>();
+    private final Set<Long> positionsLitByPlacedBlocks = new HashSet<>();
+    private final int placedLightCoverageRadius;
     public final int totalBlocks;
     public int placed = 0;
     public boolean cancelled = false;
@@ -38,10 +42,35 @@ public class Task {
         this.type = Objects.requireNonNullElse(type, LightUpType.ALL);
         this.blocks = blocks;
         this.maxBlocksPerTick = maxBlocksPerTick;
+        int emittedLight = Math.max(0, blockState.getLightEmission());
+        this.placedLightCoverageRadius = Math.max(0, emittedLight - this.minLightLevel);
         this.totalBlocks = blocks.size();
         this.commandSource = commandSource;
         this.progressEnabled = progressEnabled;
         this.actionBarFormat = actionBarFormat;
+    }
+
+    public boolean isCoveredByPlacedBlockLight(BlockPos pos) {
+        return placedLightCoverageRadius > 0 && positionsLitByPlacedBlocks.contains(pos.asLong());
+    }
+
+    public void registerPlacedLight(BlockPos center) {
+        if (placedLightCoverageRadius <= 0) {
+            return;
+        }
+        int cx = center.getX();
+        int cy = center.getY();
+        int cz = center.getZ();
+        for (int dx = -placedLightCoverageRadius; dx <= placedLightCoverageRadius; dx++) {
+            for (int dy = -placedLightCoverageRadius; dy <= placedLightCoverageRadius; dy++) {
+                for (int dz = -placedLightCoverageRadius; dz <= placedLightCoverageRadius; dz++) {
+                    if (Math.abs(dx) + Math.abs(dy) + Math.abs(dz) > placedLightCoverageRadius) {
+                        continue;
+                    }
+                    positionsLitByPlacedBlocks.add(BlockPos.asLong(cx + dx, cy + dy, cz + dz));
+                }
+            }
+        }
     }
 }
 

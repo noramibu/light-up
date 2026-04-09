@@ -1,6 +1,6 @@
 # Light Up (Fabric server-side)
 
-Light Up places light sources automatically around players to brighten caves or surfaces, with per-tick pacing and undo support. This repository targets Fabric for Minecraft 26.1.1 only.
+Light Up places light sources automatically around players to brighten caves or surfaces, with per-tick pacing and undo support. This repository targets Fabric for Minecraft 26.1.x (26.1, 26.1.1, 26.1.2), built against 26.1.2.
 
 Demo video: https://youtu.be/0liju6_XNwA
 
@@ -12,7 +12,7 @@ Demo video: https://youtu.be/0liju6_XNwA
 - Per-player undo of the last lighting task
 - Action-bar style progress (toggle/format configurable)
 - JSON configuration with live reload
-- Mojang-mapped Fabric 26.1.1 build
+- Mojang-mapped Fabric 26.1.x compatible build (built on 26.1.2)
 
 ## Commands
 - `/lightup reload` - reloads `config/light-up.json`

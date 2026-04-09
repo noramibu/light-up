@@ -55,6 +55,9 @@ public class TaskManager {
                 if (!BlockUtils.isValidPlacement(task.world, pos, task.blockState, task.type)) {
                     continue;
                 }
+                if (task.isCoveredByPlacedBlockLight(pos)) {
+                    continue;
+                }
                 int lightLevel = task.includeSkylight
                         ? task.world.getMaxLocalRawBrightness(pos)
                         : task.world.getBrightness(LightLayer.BLOCK, pos);
@@ -64,6 +67,7 @@ public class TaskManager {
                 if (task.world.setBlock(pos, task.blockState, Block.UPDATE_ALL)) {
                     task.placed++;
                     task.currentPlacementRecord.add(pos);
+                    task.registerPlacedLight(pos);
                     if (task.progressEnabled) {
                         int scanned = task.totalBlocks - task.blocks.size();
                         int percentage = Math.round((1F - ((float) task.blocks.size() / (float) task.totalBlocks)) * 100F);
