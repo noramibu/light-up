@@ -1,0 +1,83 @@
+plugins {
+    id 'net.fabricmc.fabric-loom' version "${fabric_loom_version}"
+    id 'maven-publish'
+}
+
+base {
+    archivesName = "${archives_base_name}-quilt"
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(java_version as int)
+    withSourcesJar()
+}
+
+sourceSets {
+    main {
+        java.srcDir rootProject.file('common/src/main/java')
+        resources.srcDir rootProject.file('common/src/main/resources')
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    implementation "org.quiltmc:quilt-loader:${quilt_loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+}
+
+processResources {
+    def props = [
+            version           : project.version,
+            mod_id            : mod_id,
+            mod_name          : mod_name,
+            mod_description   : mod_description,
+            mod_license       : mod_license,
+            java_version      : java_version,
+            quilt_loader      : quilt_loader_version,
+            minecraft_compat_min: minecraft_compat_min
+    ]
+
+    inputs.properties props
+    filteringCharset = 'UTF-8'
+    filesMatching('quilt.mod.json') {
+        expand props
+    }
+}
+
+tasks.named('jar', Jar).configure {
+    from(rootProject.file("LICENSE.txt")) {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+
+    doLast {
+        def jarFile = archiveFile.get().asFile
+        if (!jarFile.exists()) {
+            return
+        }
+
+        def tempDir = file("$buildDir/tmp/rewrapped-quilt-jar")
+        delete tempDir
+        tempDir.mkdirs()
+
+        copy {
+            from zipTree(jarFile)
+            into tempDir
+        }
+
+        def quiltModFile = file("$tempDir/quilt.mod.json")
+        if (!quiltModFile.exists()) {
+            return
+        }
+
+        def parsed = new groovy.json.JsonSlurper().parseText(quiltModFile.getText('UTF-8'))
+        if (parsed?.quilt_loader != null) {
+            parsed.quilt_loader.intermediate_mappings = 'net.fabricmc:intermediary'
+        }
+        def patched = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(parsed))
+        quiltModFile.setText(patched, 'UTF-8')
+
+        ant.zip(destfile: jarFile) {
+            fileset(dir: tempDir)
+        }
+    }
+}

@@ -1,18 +1,18 @@
-# Light Up (Fabric server-side)
+# Light Up (Fabric, Quilt, NeoForge)
 
-Light Up places light sources automatically around players to brighten caves or surfaces, with per-tick pacing and undo support. This repository targets Fabric for Minecraft 26.1.x (26.1, 26.1.1, 26.1.2), built against 26.1.2.
+Light Up places light sources automatically around players to brighten caves or surfaces, with per-tick pacing and undo support. This repository targets Fabric, Quilt, and NeoForge for Minecraft 26.1.x (26.1, 26.1.1, 26.1.2), built against 26.1.2.
 
 Demo video: https://youtu.be/0liju6_XNwA
 
 [![Light Up Demo](https://img.youtube.com/vi/0liju6_XNwA/hqdefault.jpg)](https://youtu.be/0liju6_XNwA "Light Up demo")
 
 ## Features
-- Server-side only (no client mod required)
+- Server-side only logic (no client-side features required)
 - Command-driven lighting with range, min light, skylight toggle, and type (surface/cave/all)
 - Per-player undo of the last lighting task
 - Action-bar style progress (toggle/format configurable)
 - JSON configuration with live reload
-- Mojang-mapped Fabric 26.1.x compatible build (built on 26.1.2)
+- Multi-loader 26.1.x compatible build (Fabric, Quilt, NeoForge)
 
 ## Commands
 - `/lightup reload` - reloads `config/light-up.json`

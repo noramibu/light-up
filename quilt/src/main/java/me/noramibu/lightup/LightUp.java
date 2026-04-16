@@ -1,0 +1,36 @@
+package me.noramibu.lightup;
+
+import me.noramibu.lightup.command.LightUpCommand;
+import me.noramibu.lightup.config.Config;
+import me.noramibu.lightup.task.TaskManager;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.UUID;
+
+public class LightUp implements ModInitializer {
+    private static final Logger LOGGER = LoggerFactory.getLogger("light-up");
+
+    private final TaskManager taskManager = new TaskManager();
+    private final Config cfg = Config.loadOrCreate();
+
+    @Override
+    public void onInitialize() {
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            UUID uuid = handler.player.getUUID();
+            taskManager.ensureUndoStack(uuid);
+        });
+
+        ServerTickEvents.END_SERVER_TICK.register(taskManager::tick);
+
+        LightUpCommand.register(taskManager, cfg);
+        LOGGER.info("Light Up initialized for Minecraft 26.1.x (built against 26.1.2)");
+    }
+}
+
+
+
+

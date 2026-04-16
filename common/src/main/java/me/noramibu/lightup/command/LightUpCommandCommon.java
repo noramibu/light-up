@@ -1,16 +1,16 @@
 package me.noramibu.lightup.command;
 
+import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import me.lucko.fabric.api.permissions.v0.Permissions;
+import com.mojang.brigadier.context.CommandContext;
 import me.noramibu.lightup.config.Config;
 import me.noramibu.lightup.model.LightUpType;
 import me.noramibu.lightup.task.Task;
 import me.noramibu.lightup.task.TaskManager;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.blocks.BlockInput;
 import net.minecraft.commands.arguments.blocks.BlockStateArgument;
 import net.minecraft.core.BlockPos;
@@ -21,18 +21,26 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.ArrayDeque;
+import java.util.Locale;
 import java.util.Queue;
+import java.util.function.Predicate;
 
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
-public final class LightUpCommand {
-    private static final String COMMAND_PERMISSION = "lightup.command";
+public final class LightUpCommandCommon {
+    private LightUpCommandCommon() {
+    }
 
-    public static void register(TaskManager manager, Config config) {
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-            var root = literal("lightup")
-                .requires(Permissions.require(COMMAND_PERMISSION, 2))
+    public static void register(
+            CommandDispatcher<CommandSourceStack> dispatcher,
+            CommandBuildContext registryAccess,
+            TaskManager manager,
+            Config config,
+            Predicate<CommandSourceStack> permission
+    ) {
+        var root = literal("lightup")
+                .requires(permission)
                 .then(literal("reload").executes(ctx -> {
                     config.reload();
                     ctx.getSource().sendSuccess(() -> Component.literal(config.messageReload), false);
@@ -57,24 +65,23 @@ public final class LightUpCommand {
                     return 1;
                 }))
                 .then(argument("block", BlockStateArgument.block(registryAccess))
-                    .then(argument("min_light_level", IntegerArgumentType.integer(0, 15))
-                        .then(argument("range", IntegerArgumentType.integer(0))
-                            .then(argument("include_skylight", BoolArgumentType.bool())
-                                .then(argument("lightup_type", StringArgumentType.string())
-                                    .suggests((ctx, builder) -> {
-                                        builder.suggest("surface");
-                                        builder.suggest("cave");
-                                        builder.suggest("all");
-                                        return builder.buildFuture();
-                                    })
-                                    .executes(ctx -> execute(ctx, manager, config)))))));
+                        .then(argument("min_light_level", IntegerArgumentType.integer(0, 15))
+                                .then(argument("range", IntegerArgumentType.integer(0))
+                                        .then(argument("include_skylight", BoolArgumentType.bool())
+                                                .then(argument("lightup_type", StringArgumentType.string())
+                                                        .suggests((ctx, builder) -> {
+                                                            builder.suggest("surface");
+                                                            builder.suggest("cave");
+                                                            builder.suggest("all");
+                                                            return builder.buildFuture();
+                                                        })
+                                                        .executes(ctx -> execute(ctx, manager, config)))))));
 
-            dispatcher.register(root);
-            dispatcher.register(literal("lu").redirect(dispatcher.getRoot().getChild("lightup")));
-        });
+        dispatcher.register(root);
+        dispatcher.register(literal("lu").redirect(dispatcher.getRoot().getChild("lightup")));
     }
 
-    private static int execute(com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx, TaskManager manager, Config config) {
+    private static int execute(CommandContext<CommandSourceStack> ctx, TaskManager manager, Config config) {
         CommandSourceStack source = ctx.getSource();
         ServerPlayer player = source.getPlayer();
         if (player == null) {
@@ -85,6 +92,7 @@ public final class LightUpCommand {
             player.sendSystemMessage(Component.literal("Please wait for the current Light Up task to complete."));
             return 1;
         }
+
         BlockInput parsed = BlockStateArgument.getBlock(ctx, "block");
         BlockState state = parsed.getState();
         int min = IntegerArgumentType.getInteger(ctx, "min_light_level");
@@ -93,7 +101,7 @@ public final class LightUpCommand {
         String typeStr = StringArgumentType.getString(ctx, "lightup_type");
         LightUpType type;
         try {
-            type = LightUpType.valueOf(typeStr.toUpperCase());
+            type = LightUpType.valueOf(typeStr.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
             type = LightUpType.ALL;
         }
@@ -101,7 +109,19 @@ public final class LightUpCommand {
         Level world = source.getLevel();
         BlockPos origin = player.blockPosition();
         Queue<BlockPos> blocks = collectBlocks(world, origin, range);
-        Task task = new Task(player.getUUID(), world, state, min, includeSky, type, blocks, config.maxBlocksPerTick, source, config.progressActionBarEnabled, config.progressActionBarFormatting);
+        Task task = new Task(
+                player.getUUID(),
+                world,
+                state,
+                min,
+                includeSky,
+                type,
+                blocks,
+                config.maxBlocksPerTick,
+                source,
+                config.progressActionBarEnabled,
+                config.progressActionBarFormatting
+        );
         manager.createTask(player, task);
         return 1;
     }
@@ -121,5 +141,3 @@ public final class LightUpCommand {
         return blocks;
     }
 }
-
-

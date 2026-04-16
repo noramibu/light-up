@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "id": "light-up",
+  "id": "${mod_id}",
   "version": "${version}",
 
-  "name": "Light Up",
-  "description": "Lights up areas to prevent mob spawning or better visibility.",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
   "authors": ["noramibu"],
   "contact": {},
 
-  "license": "MIT",
+  "license": "${mod_license}",
   "icon": "assets/light-up/icon.png",
 
   "entrypoints": {
@@ -16,10 +16,10 @@
   },
 
   "depends": {
-    "fabricloader": ">=${loader_version}",
+    "fabricloader": ">=${fabric_loader}",
     "fabric-api": "*",
     "fabric-permissions-api-v0": "*",
     "java": ">=${java_version}",
-    "minecraft": ">=26.1 <=26.1.2"
+    "minecraft": "${minecraft_version_range}"
   }
 }

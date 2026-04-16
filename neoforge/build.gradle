@@ -1,0 +1,66 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version "${moddev_gradle_version}"
+}
+
+base {
+    archivesName = "${archives_base_name}-neoforge"
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(java_version as int)
+    withSourcesJar()
+}
+
+sourceSets {
+    main {
+        java.srcDir rootProject.file('common/src/main/java')
+        resources.srcDir rootProject.file('common/src/main/resources')
+    }
+}
+
+neoForge {
+    version = neo_version
+
+    runs {
+        client {
+            client()
+        }
+
+        server {
+            server()
+            programArgument '--nogui'
+        }
+    }
+
+    mods {
+        "${neo_mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+processResources {
+    def props = [
+            version                : project.version,
+            mod_id                 : neo_mod_id,
+            mod_name               : mod_name,
+            mod_description        : mod_description,
+            mod_license            : mod_license,
+            minecraft_version_range: minecraft_version_range_neoforge,
+            neo_version            : neo_version
+    ]
+
+    inputs.properties props
+    filteringCharset = 'UTF-8'
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand props
+    }
+}
+
+jar {
+    from(rootProject.file("LICENSE.txt")) {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}

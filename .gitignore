@@ -1,9 +1,10 @@
 # Build outputs
-/build/
+**/build/
 /out/
 /output/
 /example-code/
 /run/
+**/run/
 
 # Gradle
 .gradle/

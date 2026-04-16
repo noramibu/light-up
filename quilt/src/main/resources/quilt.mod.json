@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "quilt_loader": {
+    "group": "me.noramibu",
+    "id": "${mod_id}",
+    "version": "${version}",
+    "intermediate_mappings": "net.fabricmc:intermediary",
+    "metadata": {
+      "name": "${mod_name}",
+      "description": "${mod_description}",
+      "license": "${mod_license}",
+      "contributors": {
+        "noramibu": "Developer"
+      },
+      "icon": "assets/light-up/icon.png"
+    },
+    "depends": [
+      {
+        "id": "quilt_loader",
+        "versions": ">=${quilt_loader}"
+      },
+      {
+        "id": "minecraft",
+        "versions": "~${minecraft_compat_min}"
+      },
+      {
+        "id": "java",
+        "versions": ">=${java_version}"
+      },
+      {
+        "id": "fabric-api",
+        "versions": "*"
+      }
+    ],
+    "entrypoints": {
+      "main": "me.noramibu.lightup.LightUp"
+    }
+  }
+}

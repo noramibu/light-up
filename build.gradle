@@ -1,78 +1,84 @@
 plugins {
-    id 'net.fabricmc.fabric-loom' version '1.15.5'
-    id 'maven-publish'
+    id 'base'
 }
 
-version = project.mod_version
-group = project.maven_group
+allprojects {
+    group = maven_group
+    version = mod_version
 
-base {
-    archivesName = project.archives_base_name
-}
-
-repositories {
-    maven { url = "https://maven.fabricmc.net/" }
-    maven {
-        url = "https://central.sonatype.com/repository/maven-snapshots/"
-        mavenContent {
-            snapshotsOnly()
-        }
-    }
-    mavenCentral()
-}
-
-dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    implementation "me.lucko:fabric-permissions-api:0.7.1-SNAPSHOT"
-    include "me.lucko:fabric-permissions-api:0.7.1-SNAPSHOT"
-}
-
-processResources {
-    inputs.property "version", project.version
-    inputs.property "minecraft_version", project.minecraft_version
-    inputs.property "loader_version", project.loader_version
-    inputs.property "java_version", project.java_version
-    filteringCharset = "UTF-8"
-
-    filesMatching("fabric.mod.json") {
-        expand(
-            "version": project.version,
-            "minecraft_version": project.minecraft_version,
-            "loader_version": project.loader_version,
-            "java_version": project.java_version
-        )
-    }
-}
-
-def targetJavaVersion = Integer.parseInt(project.java_version)
-tasks.withType(JavaCompile).configureEach {
-    it.options.encoding = "UTF-8"
-    it.options.release.set(targetJavaVersion)
-}
-
-java {
-    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
-    if (JavaVersion.current() < javaVersion) {
-        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
-    }
-    withSourcesJar()
-}
-
-jar {
-    from(rootProject.file("LICENSE.txt")) {
-        rename { "${it}_${project.base.archivesName.get()}" }
-    }
-}
-
-publishing {
-    publications {
-        create("mavenJava", MavenPublication) {
-            artifactId = project.archives_base_name
-            from components.java
+    repositories {
+        mavenCentral()
+        maven { url = 'https://maven.fabricmc.net' }
+        maven { url = 'https://maven.quiltmc.org/repository/release' }
+        maven { url = 'https://maven.quiltmc.org/repository/snapshot' }
+        maven { url = 'https://maven.neoforged.net/releases' }
+        maven {
+            url = 'https://central.sonatype.com/repository/maven-snapshots/'
+            mavenContent {
+                snapshotsOnly()
+            }
         }
     }
 }
 
+subprojects {
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+    }
+}
 
+tasks.register('collectBuilds', Copy) {
+    dependsOn(':fabric:build', ':quilt:build', ':neoforge:build')
+    into layout.buildDirectory.dir('all')
+
+    from(project(':fabric').layout.buildDirectory.dir('libs')) {
+        include '*.jar'
+        rename { name ->
+            def sourcesMatcher = (name =~ /^(.*)-fabric-(.*)-sources\.jar$/)
+            if (sourcesMatcher.matches()) {
+                return "${sourcesMatcher[0][1]}-${sourcesMatcher[0][2]}-fabric-sources.jar"
+            }
+            def jarMatcher = (name =~ /^(.*)-fabric-(.*)\.jar$/)
+            if (jarMatcher.matches()) {
+                return "${jarMatcher[0][1]}-${jarMatcher[0][2]}-fabric.jar"
+            }
+            name
+        }
+    }
+    from(project(':quilt').layout.buildDirectory.dir('libs')) {
+        include '*.jar'
+        rename { name ->
+            def sourcesMatcher = (name =~ /^(.*)-quilt-(.*)-sources\.jar$/)
+            if (sourcesMatcher.matches()) {
+                return "${sourcesMatcher[0][1]}-${sourcesMatcher[0][2]}-quilt-sources.jar"
+            }
+            def jarMatcher = (name =~ /^(.*)-quilt-(.*)\.jar$/)
+            if (jarMatcher.matches()) {
+                return "${jarMatcher[0][1]}-${jarMatcher[0][2]}-quilt.jar"
+            }
+            name
+        }
+    }
+    from(project(':neoforge').layout.buildDirectory.dir('libs')) {
+        include '*.jar'
+        rename { name ->
+            def sourcesMatcher = (name =~ /^(.*)-neoforge-(.*)-sources\.jar$/)
+            if (sourcesMatcher.matches()) {
+                return "${sourcesMatcher[0][1]}-${sourcesMatcher[0][2]}-neoforge-sources.jar"
+            }
+            def jarMatcher = (name =~ /^(.*)-neoforge-(.*)\.jar$/)
+            if (jarMatcher.matches()) {
+                return "${jarMatcher[0][1]}-${jarMatcher[0][2]}-neoforge.jar"
+            }
+            name
+        }
+    }
+}
+
+tasks.register('buildAll') {
+    dependsOn('collectBuilds')
+}
+
+tasks.named('build') {
+    dependsOn('collectBuilds')
+}
