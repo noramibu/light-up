@@ -23,7 +23,7 @@ public class LightUp {
         NeoForge.EVENT_BUS.addListener(this::onRegisterCommands);
         NeoForge.EVENT_BUS.addListener(this::onPlayerLoggedIn);
         NeoForge.EVENT_BUS.addListener(this::onServerTick);
-        LOGGER.info("Light Up initialized for NeoForge 26.1.x (built against 26.1.2)");
+        LOGGER.info("Light Up initialized for NeoForge 26.3");
     }
 
     private void onRegisterCommands(RegisterCommandsEvent event) {
